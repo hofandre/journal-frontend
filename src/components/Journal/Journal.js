@@ -1,24 +1,57 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {Grid, Container, Segment, Header, Button, Item} from "semantic-ui-react"
 import Entry from './Entry'
 import EntryModal from '../EntryModal/EntryModal'
+import EntryService from "../../services/entry.service.js";
+
 import "./journal.scss"
 
 const Journal = () => {
+    const entryService = new EntryService();
     const dispatch = useDispatch();
     const entries = useSelector((state) => state.journalReducer.entries)
     const showModal = useSelector((state) => state.journalReducer.showModal)
+
+    useEffect(() =>{
+        async function getEntries() {
+            const resp = await entryService.getEntries();
+            dispatch({
+                type: 'updateEntries',
+                data: resp.data
+            })
+        }
+        getEntries()
+    }, [])
+
+    const newEntry = () => {
+        dispatch({type: 'updateEditState', state: 'CREATE'})
+        toggleModal()
+    }
 
     const toggleModal = () => {
         dispatch({type: 'toggleModal', data: !showModal})
     }
 
-    const removeEntry = (index) => {
-        let newEntries = [...entries]
-        newEntries.splice(index)
-        console.log('running the delete entry function', entries,newEntries)
-        dispatch({type: 'updateEntries', data: newEntries})
+    const editEntry = (entryID) => {
+        console.log(entryID)
+        const index = entries.findIndex((elt) => {
+            return elt._id === entryID
+        })
+        const entry = entries[index]
+        update('Title', entry.title)
+        update('Content', entry.content)
+        dispatch({
+            type: 'updateEditState',
+            state: 'UPDATE'
+        })
+        toggleModal();
+    }
+
+
+    
+    const update = (type, value) => {
+        dispatch({type: 'update'+ type, data: value});
     }
 
     return (
@@ -31,7 +64,7 @@ const Journal = () => {
                         Journal for TEMP
                     </Header>
                     <Button
-                    onClick={toggleModal}>
+                    onClick={newEntry}>
                         Add a Journal Entry
                     </Button>
                 </Segment>
@@ -39,8 +72,8 @@ const Journal = () => {
                 id='entryGrid'>
                     <Grid.Column>
                     {entries && entries.length > 0 ?
-                    entries.map((entry, i) => (
-                        <Entry entry={entry} key={i} index={i} deleteHandler={removeEntry}/>
+                    entries.map((entry) => (
+                        <Entry entry={entry} key={entry._id} index={entry._id} editHandler={editEntry}/>
                     ))
                     :<Item>
                         <Item.Content>

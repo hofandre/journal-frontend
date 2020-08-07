@@ -7,8 +7,11 @@ const EntryModal = (props) => {
     const entryService = new EntryService();
 
     const dispatch = useDispatch();
+    const editState = useSelector((state) => state.journalReducer.editState)
+    const entries = useSelector((state) => state.journalReducer.entries)
     const showModal = useSelector((state) => state.journalReducer.showModal)
     const title = useSelector((state) => state.journalReducer.currentTitle)
+    const id = useSelector((state) => state.journalReducer.currentID)
     const content = useSelector((state) => state.journalReducer.currentContent)
 
 
@@ -25,13 +28,34 @@ const EntryModal = (props) => {
     }
 
     const addEntry = async () => {
-        const newEntry = {
-            date: new Date(),
-            title: title,
-            content: content
+        if (editState === 'CREATE') {
+            const newEntry = {
+                _id: null,
+                date: new Date(),
+                title: title,
+                content: content
+            }
+            const resp = await entryService.addEntry(newEntry)
+            dispatch({type: 'addEntry', entry: resp.data})
+        } else if (editState === 'UPDATE') {
+            const newEntry = {
+                _id: id,
+                date: new Date(),
+                title: title,
+                content: content
+            }
+            const resp = await entryService.editEntry(newEntry)
+            const arr = [...entries]
+            const index = arr.findIndex((elt) => {
+                return elt._id === id
+            })
+            arr[index] = newEntry
+            dispatch({
+                type: 'updateEntries',
+                data: arr
+            })
         }
-        const resp = await entryService(newEntry)
-        dispatch({type: 'addEntry', entry: newEntry})
+
         update('Title', '')
         update('Content', '')
         props.toggleModal()

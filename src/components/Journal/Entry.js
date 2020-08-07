@@ -1,13 +1,9 @@
 import React from "react";
 import { Item, Header, Button } from "semantic-ui-react"
 import "./entry.scss"
+import EditButton from '../EditButton/EditButton'
 
 const Entry = (props) => {
-    
-    const del = () => {
-        props.deleteHandler(props.index)
-    }
-
     return (
         <Item>
             <Item.Content>
@@ -17,12 +13,15 @@ const Entry = (props) => {
                     </Header>
 
                 </Item.Header>
-                <Item.Meta id='entryMeta'>
-                    Journal Entry from {props.entry.date.toLocaleDateString()}
+                <Item.Meta>
+                    Journal Entry from {new Date(props.entry.date).toLocaleString()}
                 </Item.Meta>
                 <Item.Description>
-                    {props.entry.content}
+                    <p>{props.entry.content}</p>
                 </Item.Description>
+                <Item.Extra>
+                    <EditButton entry={props.entry} editHandler={props.editHandler}/>
+                </Item.Extra>
             </Item.Content>
         </Item>
     )
